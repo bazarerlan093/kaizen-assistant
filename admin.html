@@ -101,7 +101,7 @@ function render(){
    const implExists=linked.some(p=>p.payment_type==="За реализацию");
   const legacyPaid=x.payment_status==="Выплачено";
    let buttons="";
-   if(x.status!=="Одобрено") buttons+=`<button onclick="approve('${x.id}')">Одобрить</button>`;
+   if(x.status==="На рассмотрении") buttons+=`<button onclick="approve('${x.id}')">Одобрить</button>`;
    if(x.status==="На рассмотрении") buttons+=`<button class="danger" onclick="rejectIdea('${x.id}')">Отклонить</button>`;
    if(x.status==="Одобрено" && !legacyPaid){
      buttons+=`<button class="ideaBtn" ${ideaExists?"disabled":""} onclick="createAuthorPayment('${x.id}','За идею')">${ideaExists?"✅ За идею":"💡 За идею"}</button>`;
