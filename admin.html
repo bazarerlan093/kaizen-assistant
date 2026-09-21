@@ -95,8 +95,8 @@ function render(){
    const cls=x.status==="Одобрено"?"approved":x.status==="Отклонено"?"rejected":"wait";
    const linked=payments.filter(p=>p.kaizen_id===x.id);
    const payInfo=linked.length
-     ? `<div class="paylist">${linked.map(p=>`<div class="payitem"><b>${esc(p.payment_type)}</b><br>${esc(p.recipient_name)} • ${money(p.amount)}<br><span class="${p.payment_status==="Выплачено"?"paid":"topay"}">${p.payment_status==="Выплачено"?"✅ Выплачено":"⏳ К выплате"}</span></div>`).join("")}</div>`
-     : "";
+  ? `<div class="paylist">${linked.map(p=>`<div class="payitem"><b>${esc(p.payment_type)}</b><br>${esc(p.recipient_name)} • ${money(p.amount)}<br><b>Чек: ${esc(p.ticket_number)}</b><br><span class="${p.payment_status==="Выплачено"?"paid":"topay"}">${p.payment_status==="Выплачено"?"✅ Выплачено":"⌛ К выплате"}</span></div>`).join("")}</div>`
+  : "";
    const ideaExists=linked.some(p=>p.payment_type==="За идею");
    const implExists=linked.some(p=>p.payment_type==="За реализацию");
   const legacyPaid=x.payment_status==="Выплачено";
