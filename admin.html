@@ -102,7 +102,7 @@ function render(){
   const legacyPaid=x.payment_status==="Выплачено";
    let buttons="";
    if(x.status!=="Одобрено") buttons+=`<button onclick="approve('${x.id}')">Одобрить</button>`;
-   ifif(x.status==="На рассмотрении") buttons+=`<button class="danger" onclick="rejectIdea('${x.id}')">Отклонить</button>`;
+   if(x.status==="На рассмотрении") buttons+=`<button class="danger" onclick="rejectIdea('${x.id}')">Отклонить</button>`;
    if(x.status==="Одобрено" && !legacyPaid){
      buttons+=`<button class="ideaBtn" ${ideaExists?"disabled":""} onclick="createAuthorPayment('${x.id}','За идею')">${ideaExists?"✅ За идею":"💡 За идею"}</button>`;
      buttons+=`<button class="implBtn" ${implExists?"disabled":""} onclick="createAuthorPayment('${x.id}','За реализацию')">${implExists?"✅ За реализацию":"🔧 За реализацию"}</button>`;
