@@ -99,10 +99,11 @@ function render(){
      : "";
    const ideaExists=linked.some(p=>p.payment_type==="За идею");
    const implExists=linked.some(p=>p.payment_type==="За реализацию");
+  const legacyPaid=x.payment_status==="Выплачено";
    let buttons="";
    if(x.status!=="Одобрено") buttons+=`<button onclick="approve('${x.id}')">Одобрить</button>`;
    if(x.status!=="Отклонено") buttons+=`<button class="danger" onclick="rejectIdea('${x.id}')">Отклонить</button>`;
-   if(x.status==="Одобрено"){
+   if(x.status==="Одобрено" && !legacyPaid){
      buttons+=`<button class="ideaBtn" ${ideaExists?"disabled":""} onclick="createAuthorPayment('${x.id}','За идею')">${ideaExists?"✅ За идею":"💡 За идею"}</button>`;
      buttons+=`<button class="implBtn" ${implExists?"disabled":""} onclick="createAuthorPayment('${x.id}','За реализацию')">${implExists?"✅ За реализацию":"🔧 За реализацию"}</button>`;
      buttons+=`<button class="helperBtn" onclick="createHelperPayment('${x.id}')">👥 Участник</button>`;
