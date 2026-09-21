@@ -12,7 +12,7 @@ header{background:linear-gradient(135deg,#11643e,#155fa0);color:#fff;padding:18p
 .card{background:#fff;border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 4px 18px #20304012}h1,h2{margin-top:0}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}input,select,button{font:inherit;padding:11px;border:1px solid #ccd6e2;border-radius:9px}
 button{border:0;background:#11643e;color:white;font-weight:bold;cursor:pointer}button.secondary{background:#e8eef4;color:#172033}
-.danger{background:#b42318}.ideaBtn{background:#1769aa}.implBtn{background:#087443}.helperBtn{background:#7a4aa0}button:disabled{opacity:.5;cursor:not-allowed}.paylist{margin-top:8px;display:grid;gap:6px}.payitem{background:#f5f7fa;border-radius:8px;padding:7px;line-height:1.35}.paid{color:#087443;font-weight:bold}.topay{color:#9a6700;font-weight:bold}
+.danger{background:#b42318}.ideaBtn{background:#1769aa}.implBtn{background:#087443}.helperBtn{background:#7a4aa0}button:disabled{opacity:.45;cursor:not-allowed}.paylist{margin-top:9px;display:grid;gap:6px}.payitem{background:#f5f7fa;border-radius:8px;padding:7px;line-height:1.35}.paid{color:#087443;font-weight:bold}.topay{color:#9a6700;font-weight:bold}
 table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #e5e9ef;padding:10px;text-align:left;vertical-align:top}th{background:#f5f7fa}
 .badge{display:inline-block;padding:5px 8px;border-radius:20px;background:#eef2f6}.wait{background:#fff4cc}.approved{background:#dff6e8}.rejected{background:#fee4e2}
 .login{max-width:430px;margin:70px auto}.hidden{display:none}.muted{color:#667085}.actions{display:flex;gap:6px;flex-wrap:wrap;min-width:190px}
@@ -94,7 +94,9 @@ function render(){
  $("rows").innerHTML=data.map(x=>{
    const cls=x.status==="Одобрено"?"approved":x.status==="Отклонено"?"rejected":"wait";
    const linked=payments.filter(p=>p.kaizen_id===x.id);
-   const payInfo=linked.length?`<div class="paylist">${linked.map(p=>`<div class="payitem"><b>${esc(p.payment_type)}</b><br>${esc(p.recipient_name)} • ${money(p.amount)}<br><span class="${p.payment_status==="Выплачено"?"paid":"topay"}">${p.payment_status==="Выплачено"?"✅ Выплачено":"⏳ К выплате"}</span></div>`).join("")}</div>`:"";
+   const payInfo=linked.length
+     ? `<div class="paylist">${linked.map(p=>`<div class="payitem"><b>${esc(p.payment_type)}</b><br>${esc(p.recipient_name)} • ${money(p.amount)}<br><span class="${p.payment_status==="Выплачено"?"paid":"topay"}">${p.payment_status==="Выплачено"?"✅ Выплачено":"⏳ К выплате"}</span></div>`).join("")}</div>`
+     : "";
    const ideaExists=linked.some(p=>p.payment_type==="За идею");
    const implExists=linked.some(p=>p.payment_type==="За реализацию");
    let buttons="";
