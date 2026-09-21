@@ -1,45 +1,172 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AI Кайдзен — Кабинет администратора</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#172033}header{background:linear-gradient(135deg,#11643e,#155fa0);color:#fff;padding:18px 22px}.wrap{max-width:1250px;margin:auto;padding:18px}.card{background:#fff;border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 4px 18px #20304012}h1,h2{margin-top:0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}input,select,button{font:inherit;padding:11px;border:1px solid #ccd6e2;border-radius:9px}button{border:0;background:#11643e;color:white;font-weight:bold;cursor:pointer}button.secondary{background:#e8eef4;color:#172033}.danger{background:#b42318}.ok{background:#087443}table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #e5e9ef;padding:10px;text-align:left;vertical-align:top}th{background:#f5f7fa}.badge{display:inline-block;padding:5px 8px;border-radius:20px;background:#eef2f6}.wait{background:#fff4cc}.approved{background:#dff6e8}.rejected{background:#fee4e2}.login{max-width:430px;margin:70px auto}.hidden{display:none}.muted{color:#667085}.actions{display:flex;gap:6px;flex-wrap:wrap}
-.paymentList{margin-top:8px;font-size:12px}.paymentItem{padding:7px 0;border-top:1px solid #eef1f4}.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:18px;z-index:10}.modal.hidden{display:none}.modalbox{background:white;border-radius:18px;padding:24px;max-width:430px;width:100%;text-align:center}.qr{display:flex;justify-content:center;margin:18px}.ticketNo{font-size:24px;font-weight:bold}.linkbox{font-size:12px;word-break:break-all;background:#f5f7fa;padding:10px;border-radius:8px;margin:12px 0}
-@media(max-width:800px){.grid{grid-template-columns:1fr 1fr}table{font-size:12px;display:block;overflow:auto;white-space:nowrap}}
-</style></head><body>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#172033}
+header{background:linear-gradient(135deg,#11643e,#155fa0);color:#fff;padding:18px 22px}.wrap{max-width:1350px;margin:auto;padding:18px}
+.card{background:#fff;border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 4px 18px #20304012}h1,h2{margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}input,select,button{font:inherit;padding:11px;border:1px solid #ccd6e2;border-radius:9px}
+button{border:0;background:#11643e;color:white;font-weight:bold;cursor:pointer}button.secondary{background:#e8eef4;color:#172033}
+.danger{background:#b42318}.ideaBtn{background:#1769aa}.implBtn{background:#087443}.helperBtn{background:#7a4aa0}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #e5e9ef;padding:10px;text-align:left;vertical-align:top}th{background:#f5f7fa}
+.badge{display:inline-block;padding:5px 8px;border-radius:20px;background:#eef2f6}.wait{background:#fff4cc}.approved{background:#dff6e8}.rejected{background:#fee4e2}
+.login{max-width:430px;margin:70px auto}.hidden{display:none}.muted{color:#667085}.actions{display:flex;gap:6px;flex-wrap:wrap;min-width:190px}
+.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:18px;z-index:10}.modal.hidden{display:none}
+.modalbox{background:#fff;border-radius:18px;padding:24px;max-width:460px;width:100%;text-align:center}.qr{display:flex;justify-content:center;margin:18px}
+.ticketNo{font-size:23px;font-weight:bold}.linkbox{font-size:12px;word-break:break-all;background:#f5f7fa;padding:10px;border-radius:8px;margin:12px 0}
+@media(max-width:800px){.grid{grid-template-columns:1fr 1fr}table{font-size:12px;display:block;overflow:auto;white-space:nowrap}.actions{min-width:170px}}
+</style>
+</head>
+<body>
 <header><div class="wrap"><h1>🧑‍💼 Кабинет администратора / Әкімші кабинеті</h1><div>AI Кайдзен • Единая база предприятия</div></div></header>
-<div id="login" class="card login"><h2>Вход администратора</h2><p class="muted">Используйте email и пароль пользователя, которому назначена роль admin.</p><input id="email" type="email" placeholder="Email" style="width:100%;margin-bottom:10px"><input id="password" type="password" placeholder="Пароль" style="width:100%;margin-bottom:10px"><button id="loginBtn" style="width:100%">Войти</button><div id="loginMsg" class="muted" style="margin-top:12px"></div></div>
-<main id="app" class="wrap hidden">
-<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><b id="who"></b><div id="status" class="muted">Загрузка...</div></div><button id="logout" class="secondary">Выйти</button></div></div>
-<div class="card"><h2>📊 Заявки Кайдзен</h2><div class="grid"><input id="search" placeholder="Поиск: номер, ФИО, участок"><select id="filterStatus"><option value="">Все статусы</option><option>На рассмотрении</option><option>Одобрено</option><option>Отклонено</option></select><button id="refresh">Обновить</button><div id="count" class="muted" style="padding:11px 0"></div></div></div>
-<div class="card"><div style="overflow:auto"><table><thead><tr><th>Номер / дата</th><th>Сотрудник</th><th>Участок</th><th>Проблема / идея</th><th>Статус</th><th>Вознаграждение</th><th>Действие</th></tr></thead><tbody id="rows"></tbody></table></div></div>
-</main>
-<div id="ticketModal" class="modal hidden"><div class="modalbox"><h2>🎫 Электронный билет</h2><div id="ticketNo" class="ticketNo"></div><div id="ticketPerson"></div><div id="ticketAmount" style="font-size:20px;font-weight:bold;margin-top:8px"></div><div id="qrcode" class="qr"></div><div class="muted">Кассир сканирует QR-код — билет откроется автоматически.</div><div id="ticketLink" class="linkbox"></div><button onclick="window.print()">Печать</button> <button class="secondary" onclick="closeTicket()">Закрыть</button></div></div>
-<div id="paymentModal" class="modal hidden"><div class="modalbox" style="text-align:left"><h2>💳 Отдельная выплата</h2><div id="paymentKaizen" class="muted" style="margin-bottom:12px"></div><label>Получатель</label><input id="paymentRecipient" style="width:100%;margin:6px 0 12px" placeholder="ФИО сотрудника"><label>Тип выплаты</label><select id="paymentType" style="width:100%;margin:6px 0 12px"><option>За идею</option><option>За реализацию</option><option>За участие в реализации</option></select><label>Сумма, ₸</label><input id="paymentAmount" type="number" min="1" step="1" style="width:100%;margin:6px 0 16px"><button id="createPaymentBtn">🎫 Создать отдельный чек</button> <button class="secondary" onclick="closePayment()">Отмена</button></div></div>
-<script>
-const SUPABASE_URL="https://mycscylkxnnrvpesqefo.supabase.co",SUPABASE_KEY="sb_publishable_fCXgI-ntOOnJD269S7m5Mw_oRef7pPi";
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);let all=[],payments=[],paymentIdeaId=null;const $=id=>document.getElementById(id);
-const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
-const money=v=>Number(v||0).toLocaleString("ru-RU")+" ₸";const ticket=()=>"T-"+new Date().getFullYear()+"-"+Math.random().toString(36).slice(2,8).toUpperCase();
-async function checkRole(user){const {data,error}=await sb.from("profiles").select("role").eq("id",user.id).single();if(error||!data||data.role!=="admin")throw new Error("У пользователя нет роли admin.");$("who").textContent=user.email+" • ADMIN"}
-async function load(){$("status").textContent="Загрузка заявок...";const {data,error}=await sb.from("kaizen").select("*").order("created_at",{ascending:false});if(error){$("status").textContent="Ошибка: "+error.message;return}all=data||[];const {data:payData,error:payError}=await sb.from("kaizen_payments").select("*").order("created_at",{ascending:false});payments=payError?[]:(payData||[]);render();$("status").textContent=payError?"Заявки загружены • выплаты: "+payError.message:"База подключена"}
-function render(){const q=$("search").value.trim().toLowerCase(),fs=$("filterStatus").value;const data=all.filter(x=>(!fs||x.status===fs)&&(!q||[x.kaizen_number,x.employee_name,x.area,x.problem,x.idea].join(" ").toLowerCase().includes(q)));$("count").textContent="Показано: "+data.length+" из "+all.length;
-$("rows").innerHTML=data.map(x=>{const cls=x.status==="Одобрено"?"approved":x.status==="Отклонено"?"rejected":"wait";return `<tr><td><b>${esc(x.kaizen_number)}</b><br><span class="muted">${new Date(x.created_at).toLocaleString("ru-RU")}</span>${x.ticket_number?`<br>🎫 ${esc(x.ticket_number)}`:""}</td><td><b>${esc(x.employee_name)}</b><br>${esc(x.employee_id||"")}<br>${esc(x.phone||"")}</td><td>${esc(x.area)}<br>${esc(x.category||"")}</td><td><b>Проблема:</b> ${esc(x.problem)}<br><b>Идея:</b> ${esc(x.idea)}<br><b>Эффект:</b> ${esc(x.expected_effect)}</td><td><span class="badge ${cls}">${esc(x.status)}</span><br>${esc(x.payment_status||"")}</td><td>Идея: ${money(x.reward_idea)}<br>Внедрение: ${money(x.reward_implementation)}<br>Участие: ${money(x.reward_participation)}<br><b>Итого: ${money(x.total_reward)}</b><div class="paymentList">${payments.filter(p=>p.kaizen_id===x.id).map(p=>`<div class="paymentItem">🎫 ${esc(p.payment_type)}<br><b>${esc(p.recipient_name)} — ${money(p.amount)}</b><br>${esc(p.payment_status)} ${p.ticket_number?`<button class="secondary" style="padding:5px 7px;margin-top:4px" onclick="showPaymentTicket('${p.id}')">QR</button>`:""}</div>`).join("")}</div></td><td><div class="actions">${x.status!=="Одобрено"?`<button onclick="approve('${x.id}')">Одобрить</button>`:""}${x.status!=="Отклонено"?`<button class="danger" onclick="rejectIdea('${x.id}')">Отклонить</button>`:""}${x.status==="Одобрено"&&!x.ticket_number?`<button class="secondary" onclick="makeTicket('${x.id}')">🎫 Билет</button>`:""}${x.ticket_number?`<button class="secondary" onclick="showTicket('${x.id}')">▣ QR</button>`:""}${x.status==="Одобрено"?`<button class="secondary" onclick="openPayment('${x.id}','За идею')">💡 За идею</button><button class="secondary" onclick="openPayment('${x.id}','За реализацию')">🔧 За реализацию</button><button class="secondary" onclick="openPayment('${x.id}','За участие в реализации')">👥 Участник реализации</button>`:""}</div></td></tr>`}).join("")||`<tr><td colspan="7">Заявок нет</td></tr>`}
-async function approve(id){const idea=all.find(x=>x.id===id);if(!idea)return;const r1=prompt("Награда за идею, ₸","1000");if(r1===null)return;const r2=prompt("Награда за внедрение, ₸","10000");if(r2===null)return;const r3=prompt("Награда за участие, ₸","2000");if(r3===null)return;const {error}=await sb.from("kaizen").update({status:"Одобрено",reward_idea:Number(r1)||0,reward_implementation:Number(r2)||0,reward_participation:Number(r3)||0,payment_status:"Не назначено",approved_at:new Date().toISOString()}).eq("id",id);if(error)alert("Ошибка: "+error.message);else await load()}
-async function rejectIdea(id){if(!confirm("Отклонить эту заявку?"))return;const {error}=await sb.from("kaizen").update({status:"Отклонено"}).eq("id",id);if(error)alert("Ошибка: "+error.message);else await load()}
-async function makeTicket(id){const t=ticket();const {error}=await sb.from("kaizen").update({ticket_number:t,payment_status:"К выплате"}).eq("id",id).is("ticket_number",null);if(error){alert("Не удалось создать билет: "+error.message);return}await load();const idea=all.find(x=>x.id===id);if(idea)showTicket(id)}
-function showTicket(id){const x=all.find(v=>v.id===id);if(!x||!x.ticket_number)return;const url="https://bazarerlan093.github.io/kaizen-assistant/cashier.html?ticket="+encodeURIComponent(x.ticket_number);$("ticketNo").textContent=x.ticket_number;$("ticketPerson").textContent=x.employee_name+" • "+x.kaizen_number;$("ticketAmount").textContent=money(x.total_reward);$("ticketLink").textContent=url;$("qrcode").innerHTML="";new QRCode($("qrcode"),{text:url,width:220,height:220});$("ticketModal").classList.remove("hidden")}
-function closeTicket(){$("ticketModal").classList.add("hidden")}
-function openPayment(id,type="За идею"){const x=all.find(v=>v.id===id);if(!x)return;paymentIdeaId=id;$("paymentKaizen").textContent=x.kaizen_number+" • "+x.employee_name;$("paymentType").value=type;$("paymentRecipient").value=type==="За участие в реализации"?"":x.employee_name;$("paymentAmount").value=type==="За идею"?"1000":type==="За реализацию"?"10000":"2000";$("paymentModal").classList.remove("hidden");if(type==="За участие в реализации")$("paymentRecipient").focus()}
-function closePayment(){$("paymentModal").classList.add("hidden");paymentIdeaId=null}
-$("paymentType").onchange=()=>{$("paymentAmount").value=$("paymentType").value==="За идею"?"1000":$("paymentType").value==="За реализацию"?"10000":"2000"};
-$("createPaymentBtn").onclick=async()=>{if(!paymentIdeaId)return;const recipient=$("paymentRecipient").value.trim(),type=$("paymentType").value,amount=Number($("paymentAmount").value);if(!recipient){alert("Укажите ФИО получателя");return}if(!amount||amount<=0){alert("Укажите сумму больше 0");return}const t=ticket();$("createPaymentBtn").disabled=true;const {data,error}=await sb.from("kaizen_payments").insert({kaizen_id:paymentIdeaId,recipient_name:recipient,payment_type:type,amount,ticket_number:t}).select().single();$("createPaymentBtn").disabled=false;if(error){alert("Не удалось создать чек: "+error.message);return}closePayment();await load();showPaymentTicket(data.id)};
-function showPaymentTicket(id){const p=payments.find(v=>v.id===id);if(!p)return;const x=all.find(v=>v.id===p.kaizen_id);const url="https://bazarerlan093.github.io/kaizen-assistant/cashier.html?ticket="+encodeURIComponent(p.ticket_number);$("ticketNo").textContent=p.ticket_number;$("ticketPerson").textContent=p.recipient_name+" • "+(x?x.kaizen_number:"")+" • "+p.payment_type;$("ticketAmount").textContent=money(p.amount);$("ticketLink").textContent=url;$("qrcode").innerHTML="";new QRCode($("qrcode"),{text:url,width:220,height:220});$("ticketModal").classList.remove("hidden")}
 
-$("loginBtn").onclick=async()=>{$("loginMsg").textContent="Вход...";const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error){$("loginMsg").textContent="Ошибка входа: "+error.message;return}try{await checkRole(data.user);$("login").classList.add("hidden");$("app").classList.remove("hidden");await load()}catch(e){await sb.auth.signOut();$("loginMsg").textContent=e.message}};
-$("logout").onclick=async()=>{await sb.auth.signOut();location.reload()};$("refresh").onclick=load;$("search").oninput=render;$("filterStatus").onchange=render;
+<div id="login" class="card login">
+<h2>Вход администратора</h2>
+<p class="muted">Используйте email и пароль пользователя, которому назначена роль admin.</p>
+<input id="email" type="email" placeholder="Email" style="width:100%;margin-bottom:10px">
+<input id="password" type="password" placeholder="Пароль" style="width:100%;margin-bottom:10px">
+<button id="loginBtn" style="width:100%">Войти</button>
+<div id="loginMsg" class="muted" style="margin-top:12px"></div>
+</div>
+
+<main id="app" class="wrap hidden">
+<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+<div><b id="who"></b><div id="status" class="muted">Загрузка...</div></div><button id="logout" class="secondary">Выйти</button>
+</div></div>
+
+<div class="card"><h2>📊 Заявки Кайдзен</h2><div class="grid">
+<input id="search" placeholder="Поиск: номер, ФИО, участок">
+<select id="filterStatus"><option value="">Все статусы</option><option>На рассмотрении</option><option>Одобрено</option><option>Отклонено</option></select>
+<button id="refresh">Обновить</button><div id="count" class="muted" style="padding:11px 0"></div>
+</div></div>
+
+<div class="card"><div style="overflow:auto"><table><thead><tr>
+<th>Номер / дата</th><th>Сотрудник</th><th>Участок</th><th>Проблема / идея</th><th>Статус</th><th>Вознаграждение</th><th>Действие</th>
+</tr></thead><tbody id="rows"></tbody></table></div></div>
+</main>
+
+<div id="ticketModal" class="modal hidden"><div class="modalbox">
+<h2>🎫 Отдельный чек</h2><div id="ticketNo" class="ticketNo"></div>
+<div id="ticketPerson" style="margin-top:8px"></div><div id="ticketType" style="font-weight:bold;margin-top:8px"></div>
+<div id="ticketKaizen" class="muted" style="margin-top:5px"></div><div id="ticketAmount" style="font-size:22px;font-weight:bold;margin-top:8px"></div>
+<div id="qrcode" class="qr"></div><div class="muted">Кассир сканирует QR-код для выплаты.</div>
+<div id="ticketLink" class="linkbox"></div><button onclick="window.print()">Печать</button>
+<button class="secondary" onclick="closeTicket()">Закрыть</button>
+</div></div>
+
+<script>
+const SUPABASE_URL="https://mycscylkxnnrvpesqefo.supabase.co";
+const SUPABASE_KEY="sb_publishable_fCXgI-ntOOnJD269S7m5Mw_oRef7pPi";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let all=[], payments=[];
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const money=v=>Number(v||0).toLocaleString("ru-RU")+" ₸";
+const ticket=()=>"P-"+new Date().getFullYear()+"-"+Math.random().toString(36).slice(2,8).toUpperCase();
+
+async function checkRole(user){
+ const {data,error}=await sb.from("profiles").select("role").eq("id",user.id).single();
+ if(error||!data||data.role!=="admin")throw new Error("У пользователя нет роли admin.");
+ $("who").textContent=user.email+" • ADMIN";
+}
+async function load(){
+ $("status").textContent="Загрузка заявок...";
+ const [k,p]=await Promise.all([
+   sb.from("kaizen").select("*").order("created_at",{ascending:false}),
+   sb.from("kaizen_payments").select("*").order("created_at",{ascending:false})
+ ]);
+ if(k.error){$("status").textContent="Ошибка заявок: "+k.error.message;return}
+ if(p.error){$("status").textContent="Ошибка выплат: "+p.error.message;return}
+ all=k.data||[]; payments=p.data||[]; render(); $("status").textContent="База подключена";
+}
+function paymentExists(id,type,recipient){
+ return payments.some(p=>p.kaizen_id===id&&p.payment_type===type&&(!recipient||p.recipient_name===recipient));
+}
+function render(){
+ const q=$("search").value.trim().toLowerCase(),fs=$("filterStatus").value;
+ const data=all.filter(x=>(!fs||x.status===fs)&&(!q||[x.kaizen_number,x.employee_name,x.area,x.problem,x.idea].join(" ").toLowerCase().includes(q)));
+ $("count").textContent="Показано: "+data.length+" из "+all.length;
+ $("rows").innerHTML=data.map(x=>{
+   const cls=x.status==="Одобрено"?"approved":x.status==="Отклонено"?"rejected":"wait";
+   const linked=payments.filter(p=>p.kaizen_id===x.id);
+   const payInfo=linked.length?`<br><span class="muted">Отдельных чеков: ${linked.length}</span>`:"";
+   let buttons="";
+   if(x.status!=="Одобрено") buttons+=`<button onclick="approve('${x.id}')">Одобрить</button>`;
+   if(x.status!=="Отклонено") buttons+=`<button class="danger" onclick="rejectIdea('${x.id}')">Отклонить</button>`;
+   if(x.status==="Одобрено"){
+     buttons+=`<button class="ideaBtn" onclick="createAuthorPayment('${x.id}','За идею')">💡 За идею</button>`;
+     buttons+=`<button class="implBtn" onclick="createAuthorPayment('${x.id}','За реализацию')">🔧 За реализацию</button>`;
+     buttons+=`<button class="helperBtn" onclick="createHelperPayment('${x.id}')">👥 Участник</button>`;
+   }
+   return `<tr>
+   <td><b>${esc(x.kaizen_number)}</b><br><span class="muted">${new Date(x.created_at).toLocaleString("ru-RU")}</span></td>
+   <td><b>${esc(x.employee_name)}</b><br>${esc(x.phone||"")}</td>
+   <td>${esc(x.area)}<br>${esc(x.category||"")}</td>
+   <td><b>Проблема:</b> ${esc(x.problem)}<br><b>Идея:</b> ${esc(x.idea)}<br><b>Эффект:</b> ${esc(x.expected_effect)}</td>
+   <td><span class="badge ${cls}">${esc(x.status)}</span>${payInfo}</td>
+   <td>Идея: ${money(x.reward_idea)}<br>Реализация: ${money(x.reward_implementation)}<br>Участие: ${money(x.reward_participation)}<br><b>Итого: ${money(x.total_reward)}</b></td>
+   <td><div class="actions">${buttons}</div></td></tr>`;
+ }).join("")||`<tr><td colspan="7">Заявок нет</td></tr>`;
+}
+async function approve(id){
+ const r1=prompt("Награда за идею, ₸","1000");if(r1===null)return;
+ const r2=prompt("Награда за реализацию, ₸","10000");if(r2===null)return;
+ const r3=prompt("Награда за участие, ₸","2000");if(r3===null)return;
+ const {error}=await sb.from("kaizen").update({status:"Одобрено",reward_idea:Number(r1)||0,reward_implementation:Number(r2)||0,reward_participation:Number(r3)||0,payment_status:"Не назначено",approved_at:new Date().toISOString()}).eq("id",id);
+ if(error)alert("Ошибка: "+error.message);else await load();
+}
+async function rejectIdea(id){
+ if(!confirm("Отклонить эту заявку?"))return;
+ const {error}=await sb.from("kaizen").update({status:"Отклонено"}).eq("id",id);
+ if(error)alert("Ошибка: "+error.message);else await load();
+}
+async function createAuthorPayment(id,type){
+ const x=all.find(v=>v.id===id);if(!x)return;
+ if(paymentExists(id,type,x.employee_name)){alert("Для этого сотрудника чек «"+type+"» уже создан.");return}
+ const def=type==="За идею"?x.reward_idea:x.reward_implementation;
+ const a=prompt(type+" — сумма, ₸",String(Number(def||0)));if(a===null)return;
+ const amount=Number(a);if(!amount||amount<=0){alert("Укажите сумму больше 0.");return}
+ await insertPayment(x,x.employee_name,type,amount);
+}
+async function createHelperPayment(id){
+ const x=all.find(v=>v.id===id);if(!x)return;
+ const name=prompt("ФИО участника реализации:","");if(name===null)return;
+ const clean=name.trim();if(!clean){alert("Введите ФИО участника.");return}
+ const a=prompt("Сумма за участие в реализации, ₸",String(Number(x.reward_participation||2000)));if(a===null)return;
+ const amount=Number(a);if(!amount||amount<=0){alert("Укажите сумму больше 0.");return}
+ if(paymentExists(id,"За участие в реализации",clean)){alert("Для этого участника чек уже создан.");return}
+ await insertPayment(x,clean,"За участие в реализации",amount);
+}
+async function insertPayment(x,recipient,type,amount){
+ const t=ticket();
+ const {data,error}=await sb.from("kaizen_payments").insert({
+   kaizen_id:x.id,recipient_name:recipient,payment_type:type,amount:amount,ticket_number:t,payment_status:"К выплате"
+ }).select().single();
+ if(error){alert("Не удалось создать отдельный чек: "+error.message);return}
+ await load();showPaymentTicket(data,x);
+}
+function showPaymentTicket(p,x){
+ const url="https://bazarerlan093.github.io/kaizen-assistant/cashier.html?payment_ticket="+encodeURIComponent(p.ticket_number);
+ $("ticketNo").textContent=p.ticket_number;$("ticketPerson").textContent=p.recipient_name;
+ $("ticketType").textContent=p.payment_type;$("ticketKaizen").textContent="Кайдзен: "+x.kaizen_number;
+ $("ticketAmount").textContent=money(p.amount);$("ticketLink").textContent=url;$("qrcode").innerHTML="";
+ new QRCode($("qrcode"),{text:url,width:220,height:220});$("ticketModal").classList.remove("hidden");
+}
+function closeTicket(){$("ticketModal").classList.add("hidden")}
+$("loginBtn").onclick=async()=>{
+ $("loginMsg").textContent="Вход...";
+ const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+ if(error){$("loginMsg").textContent="Ошибка входа: "+error.message;return}
+ try{await checkRole(data.user);$("login").classList.add("hidden");$("app").classList.remove("hidden");await load()}
+ catch(e){await sb.auth.signOut();$("loginMsg").textContent=e.message}
+};
+$("logout").onclick=async()=>{await sb.auth.signOut();location.reload()};
+$("refresh").onclick=load;$("search").oninput=render;$("filterStatus").onchange=render;
 (async()=>{const {data}=await sb.auth.getSession();if(data.session){try{await checkRole(data.session.user);$("login").classList.add("hidden");$("app").classList.remove("hidden");await load()}catch(e){await sb.auth.signOut()}}})();
-</script></body></html>
+</script>
+</body></html>
