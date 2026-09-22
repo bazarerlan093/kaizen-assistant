@@ -7,11 +7,13 @@
 
 <div class="card" style="margin-top:20px">
   <h2>💰 Талоны к выплате</h2>
-<div id="paymentList">Загрузка...</div><h2 style="margin-top:30px">✅ Выплаченные талоны</h2>
-<div id="paidPaymentList">Загрузка...</div>
+  <div id="paymentList">Загрузка...</div>
+
+  <h2 style="margin-top:30px">✅ Выплаченные талоны</h2>
+  <div id="paidPaymentList">Загрузка...</div>
 </div>
 
-</div></main></div>
+</main></div>
 <script>
 const SUPABASE_URL="https://mycscylkxnnrvpesqefo.supabase.co",SUPABASE_KEY="sb_publishable_fCXgI-ntOOnJD269S7m5Mw_oRef7pPi";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY),$=id=>document.getElementById(id),esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])),money=v=>Number(v||0).toLocaleString("ru-RU")+" ₸";
