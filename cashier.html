@@ -133,11 +133,11 @@ async function loadPaidPaymentList(){
 
   box.innerHTML=data.map(p=>`
     <div class="ticket" style="margin-bottom:12px">
-      <b>${esc(p.recipient_name)}</b><br>
-      ${esc(p.payment_type)} • <b>${money(p.amount)}</b><br>
-      <span class="muted">Талон: ${esc(p.ticket_number)}</span><br>
-      <span class="ok">✅ Выплачено</span>
-      ${p.paid_at?`<br><span class="muted">${new Date(p.paid_at).toLocaleString("ru-RU")}</span>`:""}
+   <b>${esc(p.recipient_name)}</b><br>
+<div>${esc(p.payment_type)} • <b>${money(p.amount)}</b></div>
+<div class="muted">Талон: ${esc(p.ticket_number)}</div>
+<div style="margin-top:8px"><span class="ok">✅ Выплачено</span></div>
+${p.paid_at?`<div class="muted">${new Date(p.paid_at).toLocaleString("ru-RU")}</div>`:""}
     </div>
   `).join("");
 }
