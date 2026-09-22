@@ -2,7 +2,15 @@
 <style>*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#10233f}header{background:linear-gradient(135deg,#11643e,#155fa0);color:#fff;padding:24px}.wrap{max-width:1050px;margin:auto;padding:24px}.card{background:#fff;border-radius:16px;padding:22px;margin:18px 0;box-shadow:0 4px 18px #20304012}.login{max-width:460px;margin:55px auto}.hidden{display:none}input,button{font:inherit;padding:12px;border-radius:9px}input{width:100%;border:1px solid #ccd6e2;margin:6px 0 10px}button{border:0;background:#116b43;color:#fff;font-weight:bold;cursor:pointer}button.secondary{background:#e8eef4;color:#172033}.err{background:#fee4e2;color:#9f1d16;padding:12px;border-radius:9px;margin-top:10px}.ok{background:#e0f6e9;color:#11643e;padding:12px;border-radius:9px;margin-top:10px}.muted{color:#667085}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.ticket{border:1px solid #d8e0e8;border-radius:12px;padding:16px;margin-top:14px}.big{font-size:22px;font-weight:bold}table{width:100%;border-collapse:collapse}td{padding:7px;border-bottom:1px solid #edf0f3}@media(max-width:600px){header{padding:18px}.wrap{padding:12px}}</style></head>
 <body><header><div class="wrap" style="padding:0"><h1>💵 Касса Кайдзен / Кайдзен кассасы</h1></div></header><div class="wrap">
 <section id="login" class="card login"><h2>Вход кассира</h2><input id="email" type="email" placeholder="Email" autocomplete="username"><input id="password" type="password" placeholder="Пароль" autocomplete="current-password"><button id="loginBtn" style="width:100%">Войти</button><div id="loginMsg"></div></section>
-<main id="app" class="hidden"><div class="card row" style="justify-content:space-between"><div><b id="who"></b><div class="muted">База подключена • роль CASHIER</div></div><button id="logout" class="secondary">Выйти</button></div><div class="card"><h2>🎫 Проверка билета</h2><div class="row"><input id="ticket" placeholder="Например: T-2026-V79SY2" style="flex:1;margin:0"><button id="findBtn">Найти билет</button></div><div id="msg"></div><div id="result"></div></div></main></div>
+<main id="app" class="hidden"><div class="card row" style="justify-content:space-between"><div><b id="who"></b><div class="muted">База подключена • роль CASHIER</div></div><button id="logout" class="secondary">Выйти</button></div><div class="card"><h2>🎫 Проверка билета</h2><div class="row"><input id="ticket" placeholder="Например: T-2026-V79SY2" style="flex:1;margin:0"><button id="findBtn">Найти билет</button></div><<div id="msg"></div>
+<div id="result"></div>
+
+<div class="card" style="margin-top:20px">
+  <h2>💰 Талоны к выплате</h2>
+  <div id="paymentList">Загрузка...</div>
+</div>
+
+</div></main></div>
 <script>
 const SUPABASE_URL="https://mycscylkxnnrvpesqefo.supabase.co",SUPABASE_KEY="sb_publishable_fCXgI-ntOOnJD269S7m5Mw_oRef7pPi";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY),$=id=>document.getElementById(id),esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])),money=v=>Number(v||0).toLocaleString("ru-RU")+" ₸";
@@ -11,7 +19,7 @@ let current=null,currentKind=null;
 async function enter(user){
  $("loginMsg").innerHTML='<div class="ok">Авторизация успешна. Проверяю роль кассира…</div>';
  const {data,error}=await sb.from("profiles").select("role").eq("id",user.id).maybeSingle();
- if(error)throw new Error("Ошибка проверки роли: "+error.message);
+ if(error)throw new Error("Ошибка проверки роли: "+error.message);  
  if(!data)throw new Error("Профиль пользователя не найден.");
  if(data.role!=="cashier")throw new Error("Требуется роль cashier.");
  $("who").textContent=user.email+" • CASHIER";$("login").classList.add("hidden");$("app").classList.remove("hidden");
@@ -69,5 +77,45 @@ async function payTicket(){
  if(error){$("msg").innerHTML='<div class="err">'+esc(error.message)+'</div>';if(btn){btn.disabled=false;btn.textContent="Подтвердить выплату "+money(amount)}return}
  await findTicket();
 }
-(async()=>{try{const {data,error}=await sb.auth.getSession();if(error)throw error;if(data.session)await enter(data.session.user)}catch(e){await sb.auth.signOut();$("loginMsg").innerHTML='<div class="err">'+esc(e.message)+'</div>'}})();
+ async function loadPaymentList(){
+  const box=$("paymentList");
+  box.innerHTML="Загрузка...";
+
+  const {data,error}=await sb
+    .from("kaizen_payments")
+    .select("id,kaizen_id,recipient_name,payment_type,amount,ticket_number,payment_status,created_at")
+    .eq("payment_status","К выплате")
+    .order("created_at",{ascending:false});
+
+  if(error){
+    box.innerHTML='<div class="err">'+esc(error.message)+'</div>';
+    return;
+  }
+
+  if(!data || !data.length){
+    box.innerHTML='<div class="ok">✅ Нет талонов, ожидающих выплаты</div>';
+    return;
+  }
+
+  box.innerHTML=data.map(p=>`
+    <div class="ticket" style="margin-bottom:12px">
+      <b>${esc(p.recipient_name)}</b><br>
+      ${esc(p.payment_type)} • <b>${money(p.amount)}</b><br>
+      <span class="muted">Талон: ${esc(p.ticket_number)}</span><br>
+      <button style="margin-top:10px" onclick="openPayment('${esc(p.ticket_number)}')">
+        Открыть талон
+      </button>
+    </div>
+  `).join("");
+}
+
+function openPayment(ticket){
+  $("ticket").value=ticket;
+  findTicket();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+(async()=>{try{const {data,error}=await sb.auth.getSession();if(error)throw error;if(data.session){
+  await enter(data.session.user);
+  await loadPaymentList();
+}}catch(e){await sb.auth.signOut();$("loginMsg").innerHTML='<div class="err">'+esc(e.message)+'</div>'}})();
 </script></body></html>
