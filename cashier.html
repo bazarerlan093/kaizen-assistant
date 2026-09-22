@@ -7,7 +7,8 @@
 
 <div class="card" style="margin-top:20px">
   <h2>💰 Талоны к выплате</h2>
-  <div id="paymentList">Загрузка...</div>
+  <div id="paymentList">Загрузка...</div<h2 style="margin-top:30px">✅ Выплаченные талоны</h2>
+<div id="paidPaymentList">Загрузка...</div>>
 </div>
 
 </div></main></div>
@@ -108,7 +109,36 @@ async function payTicket(){
     </div>
   `).join("");
 }
+async function loadPaidPaymentList(){
+  const box=$("paidPaymentList");
+  box.innerHTML="Загрузка...";
 
+  const {data,error}=await sb
+    .from("kaizen_payments")
+    .select("recipient_name,payment_type,amount,ticket_number,payment_status,paid_at,kaizen_id")
+    .eq("payment_status","Выплачено")
+    .order("paid_at",{ascending:false});
+
+  if(error){
+    box.innerHTML='<div class="err">'+esc(error.message)+'</div>';
+    return;
+  }
+
+  if(!data || !data.length){
+    box.innerHTML='<div class="muted">Выплаченных талонов пока нет</div>';
+    return;
+  }
+
+  box.innerHTML=data.map(p=>`
+    <div class="ticket" style="margin-bottom:12px">
+      <b>${esc(p.recipient_name)}</b><br>
+      ${esc(p.payment_type)} • <b>${money(p.amount)}</b><br>
+      <span class="muted">Талон: ${esc(p.ticket_number)}</span><br>
+      <span class="ok">✅ Выплачено</span>
+      ${p.paid_at?`<br><span class="muted">${new Date(p.paid_at).toLocaleString("ru-RU")}</span>`:""}
+    </div>
+  `).join("");
+}
 function openPayment(ticket){
   $("ticket").value=ticket;
   findTicket();
@@ -117,5 +147,6 @@ function openPayment(ticket){
 (async()=>{try{const {data,error}=await sb.auth.getSession();if(error)throw error;if(data.session){
   await enter(data.session.user);
   await loadPaymentList();
+  await loadPaidPaymentList();
 }}catch(e){await sb.auth.signOut();$("loginMsg").innerHTML='<div class="err">'+esc(e.message)+'</div>'}})();
 </script></body></html>
