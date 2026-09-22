@@ -105,9 +105,9 @@ async function payTicket(){
       <b>${esc(p.recipient_name)}</b><br>
       ${esc(p.payment_type)} • <b>${money(p.amount)}</b><br>
       <span class="muted">Талон: ${esc(p.ticket_number)}</span><br>
-      <button style="margin-top:10px" onclick="openPayment('${esc(p.ticket_number)}')">
-        Открыть талон
-      </button>
+<button style="margin-top:10px" onclick="payFromList('${esc(p.ticket_number)}', ${Number(p.amount)})">
+  💵 Выплатить ${money(p.amount)}
+</button>
     </div>
   `).join("");
 }
@@ -145,6 +145,22 @@ function openPayment(ticket){
   $("ticket").value=ticket;
   findTicket();
   window.scrollTo({top:0,behavior:"smooth"});
+}async function payFromList(ticket,amount){
+  if(!confirm("Подтвердить выплату "+money(amount)+"?")) return;
+
+  const {error}=await sb.rpc("pay_kaizen_payment",{
+    p_ticket_number:ticket
+  });
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  await loadPaymentList();
+  await loadPaidPaymentList();
+
+  alert("✅ Выплата проведена");
 }
 (async()=>{try{const {data,error}=await sb.auth.getSession();if(error)throw error;if(data.session){
   await enter(data.session.user);
