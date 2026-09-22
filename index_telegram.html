@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Кайдзен / AI Kaizen</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#172033}
+header{background:linear-gradient(135deg,#11643e,#155fa0);color:#fff;padding:22px 16px;text-align:center}
+header h1{margin:0 0 7px} header p{margin:0}
+.wrap{max-width:800px;margin:auto;padding:16px}
+.card{background:#fff;border-radius:16px;padding:20px;margin:16px 0;box-shadow:0 4px 18px #20304012}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}
+label{display:block;font-size:13px;font-weight:bold;margin:5px 0}
+input,textarea,select{width:100%;padding:12px;border:1px solid #d7dee8;border-radius:9px;font-size:15px}
+.checklist{display:grid;gap:9px;margin-top:8px}.checkitem{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid #d7dee8;border-radius:9px;background:#fafcff}.checkitem input{width:auto;margin-top:2px}.checkitem label{margin:0;font-weight:normal;font-size:14px;cursor:pointer}
+textarea{min-height:100px}
+button{border:0;border-radius:10px;padding:13px 16px;background:#11643e;color:#fff;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+.ticket{border:2px dashed #11643e;border-radius:15px;padding:18px}
+.ticket .id{text-align:center;font-size:27px;font-weight:bold;color:#11643e}
+.ticket img{display:block;width:180px;height:180px;margin:15px auto}
+.row{display:flex;justify-content:space-between;gap:15px;border-bottom:1px solid #e5e9ef;padding:9px 0}
+.ok{background:#e0f6e9;padding:12px;border-radius:9px}
+.err{background:#fee4e2;padding:12px;border-radius:9px}
+.small{font-size:13px;color:#667085}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<header>
+<h1>🤖 AI Кайдзен / AI Kaizen</h1>
+<p>Русский • Қазақша | Единая база предприятия</p>
+</header>
+
+<div class="wrap">
+<div class="card">
+<h2>📝 Подать Кайдзен / Кайдзен ұсыну</h2>
+<div id="connection" class="small">Проверка подключения...</div><br>
+
+<form id="form">
+<div class="grid">
+<div><label>ФИО / Аты-жөні *</label><input id="employee_name" required></div>
+<div><label>Участок / Бөлім *</label><input id="area" required></div>
+<div><label>Телефон / Телефон</label><input id="phone"></div>
+<div>
+<label>Категория / Санат</label>
+<select id="category">
+<option>Безопасность / Қауіпсіздік</option>
+<option>Качество / Сапа</option>
+<option>Производительность / Өнімділік</option>
+<option>Экономия / Үнемдеу</option>
+<option>5S</option>
+<option>Охрана труда / Еңбекті қорғау</option>
+<option>Другое / Басқа</option>
+</select>
+</div>
+<div><label>Экономия, ₸ / Үнем, ₸</label><input id="saving" type="number" min="0" value="0"></div>
+<div class="full"><label>Проблема / Мәселе *</label><textarea id="problem" required></textarea></div>
+<div class="full"><label>Идея / Идея *</label><textarea id="idea" required></textarea></div>
+<div class="full"><label>Ожидаемый результат / Күтілетін нәтиже *</label><div class="checklist"><div class="checkitem"><input type="checkbox" class="effect-option" id="effect1" value="Улучшение собственной работы / Өз жұмысын жақсарту"><label for="effect1">Улучшение собственной работы / Өз жұмысын жақсарту</label></div>
+<div class="checkitem"><input type="checkbox" class="effect-option" id="effect2" value="Экономия энергии, сырья и других ресурсов / Энергияны, шикізатты және басқа ресурстарды үнемдеу"><label for="effect2">Экономия энергии, сырья и других ресурсов / Энергияны, шикізатты және басқа ресурстарды үнемдеу</label></div>
+<div class="checkitem"><input type="checkbox" class="effect-option" id="effect3" value="Улучшение условий труда / Еңбек жағдайларын жақсарту"><label for="effect3">Улучшение условий труда / Еңбек жағдайларын жақсарту</label></div>
+<div class="checkitem"><input type="checkbox" class="effect-option" id="effect4" value="Совершенствование оборудования и процессов / Жабдықтар мен үдерістерді жетілдіру"><label for="effect4">Совершенствование оборудования и процессов / Жабдықтар мен үдерістерді жетілдіру</label></div>
+<div class="checkitem"><input type="checkbox" class="effect-option" id="effect5" value="Совершенствование инструментов и приспособлений / Құралдар мен құрылғыларды жетілдіру"><label for="effect5">Совершенствование инструментов и приспособлений / Құралдар мен құрылғыларды жетілдіру</label></div>
+<div class="checkitem"><input type="checkbox" class="effect-option" id="effect6" value="Совершенствование работы других служб / Басқа қызметтердің жұмысын жетілдіру"><label for="effect6">Совершенствование работы других служб / Басқа қызметтердің жұмысын жетілдіру</label></div>
+<div class="checkitem"><input type="checkbox" class="effect-option" id="effect7" value="Повышение качества продукции / Өнім сапасын арттыру"><label for="effect7">Повышение качества продукции / Өнім сапасын арттыру</label></div>
+<div class="checkitem"><input type="checkbox" class="effect-option" id="effect8" value="Улучшение характеристик изделий / Бұйымдардың сипаттамаларын жақсарту"><label for="effect8">Улучшение характеристик изделий / Бұйымдардың сипаттамаларын жақсарту</label></div>
+<div class="checkitem"><input type="checkbox" class="effect-option" id="effect9" value="Повышение производительности / Өнімділікті арттыру"><label for="effect9">Повышение производительности / Өнімділікті арттыру</label></div></div><div id="effectError" class="small" style="color:#b42318;display:none;margin-top:6px">Выберите хотя бы один вариант. / Кемінде бір нұсқаны таңдаңыз.</div></div>
+</div>
+<br>
+<button id="submitBtn" type="submit">🤖 Отправить / Жіберу</button>
+</form>
+</div>
+<div id="result" class="card" style="display:none"></div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://mycscylkxnnrvpesqefo.supabase.co";
+const SUPABASE_KEY = "sb_publishable_fCXgI-ntOOnJD269S7m5Mw_oRef7pPi";
+const $ = id => document.getElementById(id);
+
+function esc(x){
+  return String(x ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+function number(){
+  return "KZ-"+new Date().getFullYear()+"-"+Math.random().toString(36).slice(2,8).toUpperCase();
+}
+function qr(t){
+  return "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data="+encodeURIComponent(t);
+}
+function headers(){
+  return {
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + SUPABASE_KEY,
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  };
+}
+async function fetchWithTimeout(url, options={}, ms=10000){
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), ms);
+  try{
+    return await fetch(url,{...options,signal:controller.signal});
+  }finally{
+    clearTimeout(timer);
+  }
+}
+async function testConnection(){
+  try{
+    const r = await fetchWithTimeout(
+      SUPABASE_URL + "/rest/v1/kaizen?select=id&limit=1",
+      {headers:headers()},
+      10000
+    );
+    const txt = await r.text();
+    if(!r.ok) throw new Error("HTTP "+r.status+" — "+txt);
+    $("connection").className="ok";
+    $("connection").textContent="✅ Центральная база подключена.";
+  }catch(e){
+    $("connection").className="err";
+    $("connection").textContent="⚠️ Не удалось подключиться к базе: "+(e.name==="AbortError"?"тайм-аут соединения":e.message);
+  }
+}
+testConnection();
+
+$("form").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const btn=$("submitBtn");
+  btn.disabled=true;
+  btn.textContent="⏳ Отправка...";
+  const n=number();
+
+  const effects=[...document.querySelectorAll(".effect-option:checked")].map(x=>x.value);
+  if(!effects.length){
+    $("effectError").style.display="block";
+    btn.disabled=false;
+    btn.textContent="🤖 Отправить / Жіберу";
+    return;
+  }
+  $("effectError").style.display="none";
+
+  const row={
+    kaizen_number:n,
+    employee_name:$("employee_name").value.trim(),
+    phone:$("phone").value.trim(),
+    area:$("area").value.trim(),
+    category:$("category").value,
+    problem:$("problem").value.trim(),
+    idea:$("idea").value.trim(),
+    expected_effect:effects.join("; "),
+    expected_saving:Number($("saving").value||0),
+    status:"На рассмотрении",
+    reward_idea:0,
+    reward_implementation:0,
+    reward_participation:0,
+    payment_status:"Не назначено"
+  };
+
+  try{
+    const r=await fetchWithTimeout(
+      SUPABASE_URL+"/rest/v1/kaizen",
+      {
+        method:"POST",
+        headers:{...headers(),"Prefer":"return=minimal"},
+        body:JSON.stringify(row)
+      },
+      15000
+    );
+    const txt=await r.text();
+    if(!r.ok) throw new Error("HTTP "+r.status+" — "+txt);
+
+    $("result").style.display="block";
+    $("result").innerHTML=
+      '<div class="ticket">'+
+      '<h2>🎫 Кайдзен принят / Қабылданды</h2>'+
+      '<div class="id">'+n+'</div>'+
+      '<div class="row"><span>Сотрудник / Қызметкер</span><b>'+esc(row.employee_name)+'</b></div>'+
+      '<div class="row"><span>Участок / Бөлім</span><b>'+esc(row.area)+'</b></div>'+
+      '<div class="row"><span>Статус / Мәртебе</span><b>На рассмотрении</b></div>'+
+      '<img src="'+qr(location.href.split("?")[0]+"?ticket="+n)+'">'+
+      '<p class="small">Заявка сохранена в центральной базе. После рассмотрения администратор сообщит решение.</p>'+
+      '<a href="https://t.me/AlyansMTS_bot?start='+encodeURIComponent(n)+'" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;background:#229ED9;color:white;font-weight:bold;padding:13px 16px;border-radius:10px;margin:15px 0 10px">📲 Получать ответ в Telegram / Telegram-да жауап алу</a>'+
+      '<p class="small" style="text-align:center">Нажмите кнопку, затем в Telegram нажмите START / Бастау.</p>'+
+      '</div>';
+    $("form").reset();
+    $("saving").value=0;
+    $("result").scrollIntoView({behavior:"smooth"});
+  }catch(e){
+    $("result").style.display="block";
+    $("result").innerHTML='<div class="err"><b>Ошибка сохранения:</b><br>'+esc(e.name==="AbortError"?"Тайм-аут соединения с базой.":e.message)+'</div>';
+    $("result").scrollIntoView({behavior:"smooth"});
+  }finally{
+    btn.disabled=false;
+    btn.textContent="🤖 Отправить / Жіберу";
+  }
+});
+</script>
+</body>
+</html>
