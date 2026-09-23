@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Кайдзен — Кабинет администратора</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#172033}
+header{background:linear-gradient(135deg,#11643e,#155fa0);color:#fff;padding:18px 22px}.wrap{max-width:1350px;margin:auto;padding:18px}
+.card{background:#fff;border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 4px 18px #20304012}h1,h2{margin-top:0}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}input,select,button{font:inherit;padding:11px;border:1px solid #ccd6e2;border-radius:9px}
+button{border:0;background:#11643e;color:white;font-weight:bold;cursor:pointer}button.secondary{background:#e8eef4;color:#172033}
+.danger{background:#b42318}.ideaBtn{background:#1769aa}.implBtn{background:#087443}.helperBtn{background:#7a4aa0}button:disabled{opacity:.45;cursor:not-allowed}.paylist{margin-top:9px;display:grid;gap:6px}.payitem{background:#f5f7fa;border-radius:8px;padding:7px;line-height:1.35}.paid{color:#087443;font-weight:bold}.topay{color:#9a6700;font-weight:bold}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid #e5e9ef;padding:10px;text-align:left;vertical-align:top}th{background:#f5f7fa}
+.badge{display:inline-block;padding:5px 8px;border-radius:20px;background:#eef2f6}.wait{background:#fff4cc}.approved{background:#dff6e8}.rejected{background:#fee4e2}
+.login{max-width:430px;margin:70px auto}.hidden{display:none}.muted{color:#667085}.actions{display:flex;gap:6px;flex-wrap:wrap;min-width:190px}
+.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:18px;z-index:10}.modal.hidden{display:none}
+.modalbox{background:#fff;border-radius:18px;padding:24px;max-width:460px;width:100%;text-align:center}.qr{display:flex;justify-content:center;margin:18px}
+.ticketNo{font-size:23px;font-weight:bold}.linkbox{font-size:12px;word-break:break-all;background:#f5f7fa;padding:10px;border-radius:8px;margin:12px 0}
+@media(max-width:800px){.grid{grid-template-columns:1fr 1fr}table{font-size:12px;display:block;overflow:auto;white-space:nowrap}.actions{min-width:170px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>🧑‍💼 Кабинет администратора / Әкімші кабинеті</h1><div>AI Кайдзен • Единая база предприятия</div></div></header>
+
+<div id="login" class="card login">
+<h2>Вход администратора</h2>
+<p class="muted">Используйте email и пароль пользователя, которому назначена роль admin.</p>
+<input id="email" type="email" placeholder="Email" style="width:100%;margin-bottom:10px">
+<input id="password" type="password" placeholder="Пароль" style="width:100%;margin-bottom:10px">
+<button id="loginBtn" style="width:100%">Войти</button>
+<div id="loginMsg" class="muted" style="margin-top:12px"></div>
+</div>
+
+<main id="app" class="wrap hidden">
+<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+<div><b id="who"></b><div id="status" class="muted">Загрузка...</div></div><button id="logout" class="secondary">Выйти</button>
+</div></div>
+
+<div class="card"><h2>📊 Заявки Кайдзен</h2><div class="grid">
+<input id="search" placeholder="Поиск: номер, ФИО, участок">
+<select id="filterStatus"><option value="">Все статусы</option><option>На рассмотрении</option><option>Одобрено</option><option>Отклонено</option></select>
+<select id="periodPreset"><option value="today">Сегодня</option><option value="month" selected>Этот месяц</option><option value="all">Все периоды</option><option value="custom">Выбрать период</option></select>
+<button id="refresh">Обновить</button>
+<input id="dateFrom" type="date" class="hidden">
+<input id="dateTo" type="date" class="hidden">
+<button id="exportExcel">📊 Скачать Excel</button>
+<div id="count" class="muted" style="padding:11px 0"></div>
+</div><div class="muted" style="margin-top:10px">Период применяется к списку заявок и к выгрузке Excel.</div></div>
+
+<div class="card"><div style="overflow:auto"><table><thead><tr>
+<th>Номер / дата</th><th>Сотрудник</th><th>Участок</th><th>Проблема / идея</th><th>Статус</th><th>Вознаграждение</th><th>Действие</th>
+</tr></thead><tbody id="rows"></tbody></table></div></div>
+</main>
+
+<div id="ticketModal" class="modal hidden"><div class="modalbox">
+<h2>🎫 Отдельный чек</h2><div id="ticketNo" class="ticketNo"></div>
+<div id="ticketPerson" style="margin-top:8px"></div><div id="ticketType" style="font-weight:bold;margin-top:8px"></div>
+<div id="ticketKaizen" class="muted" style="margin-top:5px"></div><div id="ticketAmount" style="font-size:22px;font-weight:bold;margin-top:8px"></div>
+<div id="qrcode" class="qr"></div><div class="muted">Кассир сканирует QR-код для выплаты.</div>
+<div id="ticketLink" class="linkbox"></div><button onclick="window.print()">Печать</button>
+<button class="secondary" onclick="closeTicket()">Закрыть</button>
+</div></div>
+
+<script>
+const SUPABASE_URL="https://mycscylkxnnrvpesqefo.supabase.co";
+const SUPABASE_KEY="sb_publishable_fCXgI-ntOOnJD269S7m5Mw_oRef7pPi";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let all=[], payments=[];
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const money=v=>Number(v||0).toLocaleString("ru-RU")+" ₸";
+const ticket=()=>"P-"+new Date().getFullYear()+"-"+Math.random().toString(36).slice(2,8).toUpperCase();
+
+async function checkRole(user){
+ const {data,error}=await sb.from("profiles").select("role").eq("id",user.id).single();
+ if(error||!data||data.role!=="admin")throw new Error("У пользователя нет роли admin.");
+ $("who").textContent=user.email+" • ADMIN";
+}
+async function load(){
+ $("status").textContent="Загрузка заявок...";
+ const [k,p]=await Promise.all([
+   sb.from("kaizen").select("*").order("created_at",{ascending:false}),
+   sb.from("kaizen_payments").select("*").order("created_at",{ascending:false})
+ ]);
+ if(k.error){$("status").textContent="Ошибка заявок: "+k.error.message;return}
+ if(p.error){$("status").textContent="Ошибка выплат: "+p.error.message;return}
+ all=k.data||[]; payments=p.data||[]; render(); $("status").textContent="База подключена";
+}
+function paymentExists(id,type,recipient){
+ return payments.some(p=>p.kaizen_id===id&&p.payment_type===type&&(!recipient||p.recipient_name===recipient));
+}
+
+function periodRange(){
+ const preset=$("periodPreset").value, now=new Date();
+ let from=null,to=null;
+ if(preset==="today"){
+  from=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  to=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1);
+ }else if(preset==="month"){
+  from=new Date(now.getFullYear(),now.getMonth(),1);
+  to=new Date(now.getFullYear(),now.getMonth()+1,1);
+ }else if(preset==="custom"){
+  if(!$("dateFrom").value||!$("dateTo").value)return {from:null,to:null,invalid:true};
+  from=new Date($("dateFrom").value+"T00:00:00");
+  to=new Date($("dateTo").value+"T00:00:00");to.setDate(to.getDate()+1);
+ }
+ return {from,to,invalid:false};
+}
+function filteredData(){
+ const q=$("search").value.trim().toLowerCase(),fs=$("filterStatus").value,r=periodRange();
+ return all.filter(x=>{
+  const d=new Date(x.created_at);
+  const periodOk=r.invalid?false:(!r.from||d>=r.from)&&(!r.to||d<r.to);
+  const searchOk=!q||[x.kaizen_number,x.employee_name,x.area,x.problem,x.idea].join(" ").toLowerCase().includes(q);
+  return periodOk&&(!fs||x.status===fs)&&searchOk;
+ });
+}
+function render(){
+ const data=filteredData();
+ $("count").textContent="Показано: "+data.length+" из "+all.length;
+ $("rows").innerHTML=data.map(x=>{
+   const cls=x.status==="Одобрено"?"approved":x.status==="Отклонено"?"rejected":"wait";
+   const linked=payments.filter(p=>p.kaizen_id===x.id);
+   const payInfo=linked.length
+  ? `<div class="paylist">${linked.map(p=>`<div class="payitem"><b>${esc(p.payment_type)}</b><br>${esc(p.recipient_name)} • ${money(p.amount)}<br><b>Чек: ${esc(p.ticket_number)}</b><br><span class="${p.payment_status==="Выплачено"?"paid":"topay"}">${p.payment_status==="Выплачено"?"✅ Выплачено":"⌛ К выплате"}</span></div>`).join("")}</div>`
+  : "";
+   const ideaExists=linked.some(p=>p.payment_type==="За идею");
+   const implExists=linked.some(p=>p.payment_type==="За реализацию");
+  const legacyPaid=x.payment_status==="Выплачено";
+   let buttons="";
+   if(x.status==="На рассмотрении") buttons+=`<button onclick="approve('${x.id}')">Одобрить</button>`;
+   if(x.status==="На рассмотрении") buttons+=`<button class="danger" onclick="rejectIdea('${x.id}')">Отклонить</button>`;
+  if(x.status==="Отклонено" && !ideaExists) buttons+=`<button class="ideaBtn" onclick="createAuthorPayment('${x.id}','За идею')">💡 За идею</button>`;
+   if(x.status==="Одобрено" && !legacyPaid){
+     buttons+=`<button class="ideaBtn" ${ideaExists?"disabled":""} onclick="createAuthorPayment('${x.id}','За идею')">${ideaExists?"✅ За идею":"💡 За идею"}</button>`;
+     buttons+=`<button class="implBtn" ${implExists?"disabled":""} onclick="createAuthorPayment('${x.id}','За реализацию')">${implExists?"✅ За реализацию":"🔧 За реализацию"}</button>`;
+     buttons+=`<button class="helperBtn" onclick="createHelperPayment('${x.id}')">👥 Участник</button>`;
+   }
+   return `<tr>
+   <td><b>${esc(x.kaizen_number)}</b><br><span class="muted">${new Date(x.created_at).toLocaleString("ru-RU")}</span></td>
+   <td><b>${esc(x.employee_name)}</b><br>${esc(x.phone||"")}</td>
+   <td>${esc(x.area)}<br>${esc(x.category||"")}</td>
+   <td><b>Проблема:</b> ${esc(x.problem)}<br><b>Идея:</b> ${esc(x.idea)}<br><b>Эффект:</b> ${esc(x.expected_effect)}</td>
+   <td><span class="badge ${cls}">${esc(x.status)}</span>${payInfo}</td>
+   <td>Идея: ${money(x.reward_idea)}<br>Реализация: ${money(x.reward_implementation)}<br>Участие: ${money(x.reward_participation)}<br><b>Итого: ${money(x.total_reward)}</b></td>
+   <td><div class="actions">${buttons}</div></td></tr>`;
+ }).join("")||`<tr><td colspan="7">Заявок нет</td></tr>`;
+}
+async function approve(id){
+ if(!confirm("Одобрить эту заявку?"))return;
+ const {error}=await sb.from("kaizen").update({
+   status:"Одобрено",
+   reward_idea:1000,
+   reward_implementation:10000,
+   reward_participation:2000,
+   payment_status:"Не назначено",
+   approved_at:new Date().toISOString()
+ }).eq("id",id);
+ if(error)alert("Ошибка: "+error.message);else await load();
+}
+async function rejectIdea(id){
+ if(!confirm("Отклонить эту заявку?"))return;
+ const {error}=await sb.from("kaizen").update({status:"Отклонено"}).eq("id",id);
+ if(error)alert("Ошибка: "+error.message);else await load();
+}
+async function createAuthorPayment(id,type){
+ const x=all.find(v=>v.id===id);if(!x)return;
+ if(paymentExists(id,type,x.employee_name)){alert("Для этого сотрудника чек «"+type+"» уже создан.");return}
+ const def=type==="За идею"?Number(x.reward_idea||1000):Number(x.reward_implementation||10000);
+ const a=prompt(type+" — сумма, ₸",String(def));if(a===null)return;
+ const amount=Number(a);if(!amount||amount<=0){alert("Укажите сумму больше 0.");return}
+ await insertPayment(x,x.employee_name,type,amount);
+}
+async function createHelperPayment(id){
+ const x=all.find(v=>v.id===id);if(!x)return;
+ const name=prompt("ФИО участника реализации:","");if(name===null)return;
+ const clean=name.trim();if(!clean){alert("Введите ФИО участника.");return}
+ const a=prompt("Сумма за участие в реализации, ₸",String(Number(x.reward_participation||2000)));if(a===null)return;
+ const amount=Number(a);if(!amount||amount<=0){alert("Укажите сумму больше 0.");return}
+ if(paymentExists(id,"За участие в реализации",clean)){alert("Для этого участника чек уже создан.");return}
+ await insertPayment(x,clean,"За участие в реализации",amount);
+}
+async function insertPayment(x,recipient,type,amount){
+ const t=ticket();
+ const {data,error}=await sb.from("kaizen_payments").insert({
+   kaizen_id:x.id,recipient_name:recipient,payment_type:type,amount:amount,ticket_number:t,payment_status:"К выплате"
+ }).select().single();
+ if(error){alert("Не удалось создать отдельный чек: "+error.message);return}
+ await load();showPaymentTicket(data,x);
+}
+function showPaymentTicket(p,x){
+ const url="https://bazarerlan093.github.io/kaizen-assistant/cashier.html?payment_ticket="+encodeURIComponent(p.ticket_number);
+ $("ticketNo").textContent=p.ticket_number;$("ticketPerson").textContent=p.recipient_name;
+ $("ticketType").textContent=p.payment_type;$("ticketKaizen").textContent="Кайдзен: "+x.kaizen_number;
+ $("ticketAmount").textContent=money(p.amount);$("ticketLink").textContent=url;$("qrcode").innerHTML="";
+ new QRCode($("qrcode"),{text:url,width:220,height:220});$("ticketModal").classList.remove("hidden");
+}
+
+function exportAdminExcel(){
+ try{
+  const data=filteredData();
+  if(!data.length){alert("За выбранный период заявок нет.");return}
+  const rows=data.map((x,i)=>{
+   const linked=payments.filter(p=>p.kaizen_id===x.id);
+   return {
+    "№":i+1,
+    "№ Кайдзен":x.kaizen_number||"",
+    "Дата подачи":x.created_at?new Date(x.created_at).toLocaleString("ru-RU"):"",
+    "Сотрудник":x.employee_name||"",
+    "Телефон":x.phone||"",
+    "Участок":x.area||"",
+    "Категория":x.category||"",
+    "Проблема":x.problem||"",
+    "Предложение":x.idea||"",
+    "Ожидаемый результат":x.expected_effect||"",
+    "Статус":x.status||"",
+    "За идею, ₸":Number(x.reward_idea||0),
+    "За реализацию, ₸":Number(x.reward_implementation||0),
+    "За участие, ₸":Number(x.reward_participation||0),
+    "Итого, ₸":Number(x.total_reward||0),
+    "Талоны":linked.map(p=>`${p.ticket_number} | ${p.payment_type} | ${p.recipient_name} | ${Number(p.amount||0)} ₸ | ${p.payment_status}`).join("\n")
+   };
+  });
+  const ws=XLSX.utils.json_to_sheet(rows);
+  ws["!cols"]=[{wch:5},{wch:20},{wch:20},{wch:28},{wch:18},{wch:22},{wch:22},{wch:35},{wch:40},{wch:35},{wch:18},{wch:14},{wch:18},{wch:16},{wch:14},{wch:55}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Кайдзен");
+  const d=new Date(),ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  XLSX.writeFile(wb,`Kaizen_Admin_${ds}.xlsx`);
+ }catch(e){alert("Ошибка выгрузки: "+(e.message||e))}
+}
+function closeTicket(){$("ticketModal").classList.add("hidden")}
+$("loginBtn").onclick=async()=>{
+ $("loginMsg").textContent="Вход...";
+ const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+ if(error){$("loginMsg").textContent="Ошибка входа: "+error.message;return}
+ try{await checkRole(data.user);$("login").classList.add("hidden");$("app").classList.remove("hidden");await load()}
+ catch(e){await sb.auth.signOut();$("loginMsg").textContent=e.message}
+};
+$("logout").onclick=async()=>{await sb.auth.signOut();location.reload()};
+$("refresh").onclick=load;$("search").oninput=render;$("filterStatus").onchange=render;
+$("periodPreset").onchange=()=>{
+ const custom=$("periodPreset").value==="custom";
+ $("dateFrom").classList.toggle("hidden",!custom);
+ $("dateTo").classList.toggle("hidden",!custom);
+ render();
+};
+$("dateFrom").onchange=render;$("dateTo").onchange=render;
+$("exportExcel").onclick=exportAdminExcel;
+(async()=>{const {data}=await sb.auth.getSession();if(data.session){try{await checkRole(data.session.user);$("login").classList.add("hidden");$("app").classList.remove("hidden");await load()}catch(e){await sb.auth.signOut()}}})();
+</script>
+</body></html>
