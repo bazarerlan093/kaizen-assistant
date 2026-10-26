@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Кайдзен-помощник · Альянс МТС</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#17354d;--blue:#1876ad;--green:#177b5d;--ink:#1d3445;--muted:#6a7d8a;--line:#dfe8ed;--bg:#f3f7f8;--white:#fff;--pale:#eaf4f8;--shadow:0 12px 32px #102f4512}*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}.wrap{max-width:900px;margin:0 auto;padding:24px 18px 40px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.brand{display:flex;align-items:center;gap:12px}.logo{width:43px;height:43px;border-radius:14px;background:var(--navy);display:grid;place-items:center;color:white;font-size:21px;font-weight:800}.brand b{display:block}.brand small{color:var(--muted)}.pill{background:#e4f3ec;color:var(--green);font-weight:700;font-size:12px;padding:7px 11px;border-radius:30px}.hero{padding:25px 28px;border-radius:22px;color:white;background:linear-gradient(115deg,#18364e,#24607b);box-shadow:var(--shadow)}.hero small{color:#b4e1eb;font-weight:700;letter-spacing:.07em;text-transform:uppercase}.hero h1{margin:9px 0;font-size:clamp(25px,4vw,35px)}.hero p{margin:0;line-height:1.5;color:#d8e9ef;max-width:650px}.card{background:white;border:1px solid var(--line);border-radius:19px;padding:23px;margin-top:18px;box-shadow:var(--shadow)}.card h2{font-size:20px;margin:0 0 8px}.hint{color:var(--muted);line-height:1.5;margin:0 0 18px}.field{margin:14px 0}.field label{display:block;font-size:13px;font-weight:750;margin-bottom:7px}.field input,.field select,.field textarea{width:100%;font:inherit;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:white;color:var(--ink)}.field textarea{min-height:108px;resize:vertical}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.btn{border:0;border-radius:12px;background:var(--blue);color:white;font-size:14px;font-weight:750;padding:12px 16px;cursor:pointer}.btn:hover{filter:brightness(.95)}.btn.secondary{background:white;border:1px solid var(--line);color:var(--ink)}.btn:disabled{opacity:.55;cursor:wait}.status{font-size:13px;color:var(--muted);min-height:20px}.error{color:#a53939}.chat{display:flex;flex-direction:column;gap:12px;margin:20px 0;max-height:50vh;overflow:auto;padding:2px}.bubble{max-width:88%;padding:13px 15px;border-radius:15px;line-height:1.5;white-space:pre-wrap}.bubble.user{align-self:flex-end;background:#e5f2f8}.bubble.ai{align-self:flex-start;background:#f0f4f6;border:1px solid var(--line)}.case{font-size:12px;color:var(--muted);margin:0 0 12px}.hidden{display:none!important}.notice{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:14px;margin-top:18px}.small-link{color:var(--blue);font-weight:650;text-decoration:none}.topbutton{border:1px solid var(--line);border-radius:11px;background:white;padding:9px 11px;color:var(--ink);font-weight:700;cursor:pointer}@media(max-width:560px){.wrap{padding:15px 12px 28px}.hero{padding:21px}.card{padding:18px}.pill{font-size:11px}}
+</style>
+</head>
+<body><main class="wrap">
+<header class="top"><div class="brand"><div class="logo">К</div><div><b>Кайдзен‑помощник</b><small>Альянс МТС · проверка на одном участке</small></div></div><div class="row"><span id="signedIn" class="pill hidden">Администратор</span><button id="logout" class="topbutton hidden">Выйти</button></div></header>
+<section class="hero"><small>Проблема → причина → улучшение</small><h1>Найдём решение по Кайдзену</h1><p>Опишите, что происходит. Помощник уточнит факты, предложит конкретное улучшение и поможет проверить результат. Он не будет просто перечислять названия методов.</p></section>
+<section id="loginCard" class="card"><h2>Вход администратора</h2><p class="hint">На первом этапе помощник доступен только администратору для проверки. Используйте свою учётную запись Кайдзен‑ассистента.</p><form id="loginForm"><div class="field"><label for="email">Электронная почта</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label for="password">Пароль</label><input id="password" type="password" autocomplete="current-password" required></div><div class="row"><button id="loginButton" class="btn" type="submit">Войти</button><span id="loginStatus" class="status" role="status"></span></div></form><p class="notice">Пароль не сохраняется. Сеанс хранится только до закрытия вкладки. Помощник не откроется для обычного сотрудника.</p></section>
+<section id="assistantCard" class="card hidden"><div class="row" style="justify-content:space-between"><div><h2>Разбор проблемы</h2><p class="hint" style="margin:4px 0 0">Начните с одного замечания. Можно продолжить текущую карточку или открыть новую.</p></div><button id="newCase" class="btn secondary" type="button">＋ Новая карточка</button></div><p id="caseLabel" class="case"></p><div class="field"><label for="area">Участок</label><select id="area"><option>Цех сухих смесей</option><option>Другой участок</option></select></div><div id="chat" class="chat" aria-live="polite"></div><form id="messageForm"><div class="field"><label for="message">Опишите проблему или ответьте на вопрос помощника</label><textarea id="message" maxlength="4000" required placeholder="Например: после уборки инструмент снова оказывается в проходе. Уже пробовали сделать замечание, но порядок не сохраняется."></textarea></div><div class="row"><button id="sendButton" class="btn" type="submit">Отправить помощнику</button><span id="chatStatus" class="status" role="status"></span></div></form><p class="notice">Для опасных неисправностей действуйте по правилам участка и сразу привлекайте мастера. Помощник помогает разбирать проблему, но не заменяет утверждённую инструкцию.</p></section>
+<footer class="notice">Ключ ИИ хранится в Supabase, а доступ к этому помощнику проверяется по роли администратора.</footer>
+</main>
+<script>
+const SUPABASE_URL="https://mycscylkxnnrvpesqefo.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_fCXgI-ntOOnJD269S7m5Mw_oRef7pPi";
+const FUNCTION_URL=`${SUPABASE_URL}/functions/v1/kaizen-helper-ai`;
+const CASE_KEY="kaizen_helper_case_id";
+let caseId=sessionStorage.getItem(CASE_KEY)||"";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const $=id=>document.getElementById(id);
+
+function status(id,text,error=false){const el=$(id);el.textContent=text;el.classList.toggle("error",error)}
+async function authHeaders(){const {data}=await sb.auth.getSession();return {apikey:SUPABASE_PUBLISHABLE_KEY,Authorization:`Bearer ${data.session?.access_token||""}`,"Content-Type":"application/json"}}
+function addBubble(text,who){const bubble=document.createElement("div");bubble.className=`bubble ${who}`;bubble.textContent=text;$("chat").appendChild(bubble);$("chat").scrollTop=$("chat").scrollHeight}
+function showAssistant(){ $("loginCard").classList.add("hidden");$("assistantCard").classList.remove("hidden");$("signedIn").classList.remove("hidden");$("logout").classList.remove("hidden");$("caseLabel").textContent=caseId?`Продолжаем карточку ${caseId.slice(0,8).toUpperCase()}`:"Новая карточка проблемы"; }
+function showLogin(){ $("loginCard").classList.remove("hidden");$("assistantCard").classList.add("hidden");$("signedIn").classList.add("hidden");$("logout").classList.add("hidden"); }
+async function checkAdmin(userId){
+  const {data,error}=await sb.from("profiles").select("role").eq("id",userId).single();
+  if(error||!data||data.role!=="admin")return false;
+  return true;
+}
+
+$("loginForm").addEventListener("submit",async event=>{
+  event.preventDefault();$("loginButton").disabled=true;status("loginStatus","Выполняется вход…");
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+    if(error||!data.session)throw new Error(error?.message||"Не удалось войти. Проверьте почту и пароль.");
+    if(!await checkAdmin(data.user.id)){await sb.auth.signOut();throw new Error("У пользователя нет роли admin.");}
+    status("loginStatus","");showAssistant();addBubble("Опишите проблему одним сообщением. Я уточню факты и подберу конкретное улучшение.","ai");
+  }catch(error){status("loginStatus",error.message||"Ошибка входа.",true)}
+  finally{$("loginButton").disabled=false}
+});
+
+$("logout").addEventListener("click",async()=>{await sb.auth.signOut();caseId="";sessionStorage.removeItem(CASE_KEY);$("chat").innerHTML="";showLogin();status("loginStatus","Вы вышли из системы.")});
+$("newCase").addEventListener("click",()=>{caseId="";sessionStorage.removeItem(CASE_KEY);$("chat").innerHTML="";$("caseLabel").textContent="Новая карточка проблемы";addBubble("Опишите проблему. Я сначала разберусь в ситуации, затем предложу конкретное улучшение.","ai");$("message").focus()});
+
+$("messageForm").addEventListener("submit",async event=>{
+  event.preventDefault();const message=$("message").value.trim();if(!message)return;
+  $("sendButton").disabled=true;status("chatStatus","Помощник разбирает ситуацию…");addBubble(message,"user");$("message").value="";
+  const body={message,area:$("area").value,case_id:caseId||undefined};
+  try{
+    const response=await fetch(FUNCTION_URL,{method:"POST",headers:await authHeaders(),body:JSON.stringify(body)});
+    const result=await response.json();
+    if(!response.ok){
+      if(result.error==="ai_key_not_configured")throw new Error("В Supabase ещё не добавлен секрет OPENAI_API_KEY. После его настройки помощник сможет отвечать.");
+      if(result.error==="admin_sign_in_required")throw new Error("Сеанс истёк. Войдите снова.");
+      if(result.error==="ai_request_failed")throw new Error("Не удалось получить ответ от ИИ. Проверьте ключ OpenAI API и его доступ к выбранной модели.");
+      throw new Error(result.error||"Ошибка помощника.");
+    }
+    caseId=result.case_id;sessionStorage.setItem(CASE_KEY,caseId);$("caseLabel").textContent=`Карточка ${result.case_number} · статус: ${result.status}`;addBubble(result.reply,"ai");status("chatStatus","");
+  }catch(error){addBubble(error.message||"Связь с помощником не установлена.","ai");status("chatStatus","Ответ не получен",true)}
+  finally{$("sendButton").disabled=false}
+});
+
+(async()=>{try{const {data}=await sb.auth.getSession();if(data.session&&await checkAdmin(data.session.user.id)){showAssistant();if(caseId)addBubble(`Сеанс восстановлен. Можно продолжить карточку ${caseId.slice(0,8).toUpperCase()} — отправьте новое сообщение.`,"ai");else addBubble("Опишите проблему одним сообщением. Я уточню факты и подберу конкретное улучшение.","ai")}else{await sb.auth.signOut();sessionStorage.removeItem(CASE_KEY);caseId="";showLogin()}}catch{showLogin()}})();
+</script></body></html>
